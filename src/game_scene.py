@@ -11,6 +11,7 @@ from pview import T
 import pview
 import pygame as pg
 from scene import Scene
+from settings import BASE_RES
 
 
 class GameScene(Scene):
@@ -40,25 +41,25 @@ class GameScene(Scene):
         self.level = Level()
         self.bg = self.level.pre_render_map()
         
-        
     def _draw(self):
         pview.fill((0, 155, 155))
         # pg.draw.rect(pview.screen, (200, 0, 0), T(20, 20, 100, 200))
-        pview.screen.blit(self.bg,(0,0))
+        pview.screen.blit(self.bg, (0, 0))
         pg.display.flip()
     
     def redraw(self):
         self.bg = self.level.pre_render_map()
         self._draw()
         
+        
 if __name__ == "__main__":
     from constants import OUT_QUIT, OUT_FSCR
     pg.init()
-    pview.set_mode((800, 600))
+    pview.set_mode((BASE_RES, BASE_RES))
     clock = pg.time.Clock()
     scene = GameScene()
     while True:
-        ms = clock.tick(60)
+        ms = clock.tick(30)
         outcome = controller.poll()  # get player input
         if outcome == OUT_QUIT:
             break

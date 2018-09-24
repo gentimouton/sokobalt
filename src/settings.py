@@ -3,7 +3,8 @@ import pygame as pg
 
 FPS = 30
 DEBUG = True
-BASE_RES = 800 # ideally a multiple of 16
+BASE_RES = 640 # ideally a multiple of 8
+SPRITESHEET = '../assets/sokoban_tilesheet.png'
 
 # map button to keys
 bmap = {

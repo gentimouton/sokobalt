@@ -10,4 +10,4 @@ BTN_SLCT, BTN_UP, BTN_DOWN = 'select', 'up', 'down',
 BTN_LEFT, BTN_RIGHT = 'left', 'right'
 
 # map tile values
-TILE_WALL, TILE_FLOR = 'wall', 'floor'
+TWAL, TFLR, TGOL = 'wall', 'floor', 'goal'
