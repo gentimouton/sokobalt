@@ -1,7 +1,8 @@
 from constants import TWAL, TFLR, TGOL
+from controls import controller
 from pview import T
 import pygame as pg
-from settings import BASE_RES, SPRITESHEET
+from settings import BASE_RES
 
 
 DIR_N = 'N'
@@ -13,15 +14,16 @@ dir_vectors = {DIR_N: (0, -1), DIR_S: (0, 1), DIR_E: (1, 0), DIR_W: (-1, 0)}
 N_TILES = 16  # square levels of 16x16 tiles
 
 
-def load_spritesheet(filename):
-    """ Load spritesheet from file. 
+def load_spritesheet(filename, spr_w):
+    """ Load spritesheet from file.
+    spr_w is width of a sprite, in pixel. 
     Returned img size is that of original file, not scaled to game window. 
     return [wall, floor, goal, box, player]
     """
     sheet = pg.image.load(filename).convert()
     sheet.set_colorkey((255, 0, 255), pg.RLEACCEL)
-    w = 8  # width of sprite in pixels. Sprites are square.
-    images = [sheet.subsurface((x * w, 0, w, w)) for x in range(5)]
+    
+    images = [sheet.subsurface((x * spr_w, 0, spr_w, spr_w)) for x in range(5)]
 #     if resize_to:
 #         images = list(
 #             map(
@@ -53,7 +55,8 @@ class Level():
     def __init__(self):
         """ Load spritesheet and map only once. Rescale in pre_render_map. """
         # self.tiles, self.tile_types = load_map('assets/level.map') # TODO
-        self.sheet = load_spritesheet(SPRITESHEET)
+        sheet_filename = '../assets/sokobalt_tilesheet_8px.png'
+        self.sheet = load_spritesheet(sheet_filename, 8)
         self.tiles = load_map() 
         self.w, self.h = len(self.tiles[0]), len(self.tiles)
         self.characters = {}
@@ -95,4 +98,26 @@ class Level():
             self.occupancy[oldx][oldy] = None
         self.occupancy[x][y] = char
         self.characters[char] = pos
-        
+
+
+if __name__ == "__main__":
+    from constants import OUT_QUIT, OUT_FSCR
+    import pview
+    pg.init()
+    pview.set_mode((BASE_RES, BASE_RES))
+    clock = pg.time.Clock()
+    level = Level()
+    bg = level.pre_render_map()
+    
+    while True:
+        ms = clock.tick(30)
+        outcome = controller.poll()  # get player input
+        if outcome == OUT_QUIT:
+            break
+        elif outcome == OUT_FSCR:
+            pview.toggle_fullscreen()
+            bg = level.pre_render_map()
+        pview.screen.blit(bg, (0, 0))
+        pg.display.flip()
+
+        pg.display.set_caption('level %.1f' % clock.get_fps())        
