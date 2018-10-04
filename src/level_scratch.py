@@ -137,17 +137,18 @@ def test_load_level_set():
     with open(filename, 'w') as f:
         level1 = '\n'.join(['#####', '#@$.#', '#####'])
         level2 = '\n'.join(['#####', '#+ $#', '#$.*#', '#####'])
-        level3 = '\n'.join(['#####', '#+ @#', '#####'])
         f.write('level 1\n' + level1 + '\r\n')
-        f.write('level 2\n' + level2 + '\n')
-        f.write('level 3\n' + level3)
+        f.write('level 2\n' + level2)
     # load and test set
     levels = load_level_set(filename)
-    assert len(levels) == 2  # detected 2 well-formed levels, ignore 3rd
+    assert len(levels) == 2  # detected 2 well-formed levels
     assert levels[0] and len(levels[0].tiles) == SIZE
     assert levels[1] and len(levels[1].tiles) == SIZE
     # delete file
-    os.remove(filename)
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
     
     
 if __name__ == "__main__":
