@@ -1,6 +1,8 @@
 import os
 
 SIZE = 16  # max map width and height
+TWAL = '#'
+charset = set(['@', '$', '.', '+', '*', TWAL])
 
 
 class Level:
@@ -49,16 +51,16 @@ def build_level_from_tiles(tiles):
     for i, line in enumerate(tiles):
         left_hole = (SIZE - len(line)) // 2
         right_hole = SIZE - len(line) - left_hole 
-        tiles[i] = ['#'] * left_hole + tiles[i] + ['#'] * right_hole 
+        tiles[i] = [TWAL] * left_hole + tiles[i] + [TWAL] * right_hole 
     # add rows of walls above and below, if necessary
-    tiles = [['#'] * SIZE] * ((SIZE - h) // 2) + tiles
-    tiles = tiles + [['#'] * SIZE] * (SIZE - len(tiles))  # remaining missing 
+    tiles = [[TWAL] * SIZE] * ((SIZE - h) // 2) + tiles
+    tiles = tiles + [[TWAL] * SIZE] * (SIZE - len(tiles))  # remaining missing 
     
     # check that there are walls all around the periphery
-    n_walls = sum([1 if e == '#' else 0 for e in tiles[0]])
-    n_walls += sum([1 if row[0] == '#' else 0 for row in tiles[1:-1]])
-    n_walls += sum([1 if row[-1] == '#' else 0 for row in tiles[1:-1]])
-    n_walls += sum([1 if e == '#' else 0 for e in tiles[-1]])
+    n_walls = sum([1 if e == TWAL else 0 for e in tiles[0]])
+    n_walls += sum([1 if row[0] == TWAL else 0 for row in tiles[1:-1]])
+    n_walls += sum([1 if row[-1] == TWAL else 0 for row in tiles[1:-1]])
+    n_walls += sum([1 if e == TWAL else 0 for e in tiles[-1]])
     if n_walls != 4 * (SIZE - 1):
         print('Level has %d peripheral walls, need %d' 
               % (n_walls, 4 * (SIZE - 1)))
@@ -98,8 +100,7 @@ def load_level_set(filepath):
     
     with open(filepath, 'r') as f:
         levels = []
-        level_tiles = []
-        charset = set(['@', '$', '.', '+', '*', '#']) 
+        level_tiles = [] 
         for line in list(f) + ['\n']:  # extra line break for last level
             if line and line[0] in charset:  # map line
                 level_tiles.append(list(line.rstrip('\r\n')))
