@@ -169,10 +169,12 @@ def test_flood_fill():
         [3, 1, 2]
         ]
     flood_fill(a, (0, 0), [1, 3], 2)
-    assert a[0][0] == 2
-    assert a[2][0] == 2
-    assert a[2][1] == 2
-    assert a[1][2] == 1  # enclaved 1, should stay 
+    r = [ 
+        [2, 2, 2],
+        [2, 2, 1],
+        [2, 2, 2]
+        ]
+    assert a == r
 
     
 def test_find_element():
