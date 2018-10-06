@@ -14,16 +14,16 @@ dir_vectors = {DIR_N: (0, -1), DIR_S: (0, 1), DIR_E: (1, 0), DIR_W: (-1, 0)}
 N_TILES = 16  # square levels of 16x16 tiles
 
 
-def load_spritesheet(filename, spr_w):
+def load_spritesheet(filename, s):
     """ Load spritesheet from file.
-    spr_w is width of a sprite, in pixel. 
+    s is width of a sprite, in pixel. 
     Returned img size is that of original file, not scaled to game window. 
     return [wall, floor, goal, box, player]
     """
     sheet = pg.image.load(filename).convert()
     sheet.set_colorkey((255, 0, 255), pg.RLEACCEL)
     
-    images = [sheet.subsurface((x * spr_w, 0, spr_w, spr_w)) for x in range(5)]
+    images = [sheet.subsurface((x * s, 0, s, s)) for x in range(5)]
 #     if resize_to:
 #         images = list(
 #             map(

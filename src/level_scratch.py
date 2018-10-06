@@ -1,21 +1,43 @@
 import os
 
 SIZE = 16  # max map width and height
-TWAL = '#'
-charset = set(['@', '$', '.', '+', '*', TWAL])
+TWAL, TFLR, TGOL = '#', ' ', '.'
+TPLR, TBOX, TPGL, TBGL = '@', '$', '+', '*'
+TILESET = set([TWAL, TFLR, TGOL, TPLR, TBOX, TPGL, TBGL])
 
 
 class Level:
     """ A Level is a 16x16 map, a player starting position, 
     a list of goal positions, and a list of starting box positions. 
     """
-
-    def __init__(self, tiles, goals, start, boxes):
-        """ tiles is list of lists, goals list of 2-tuples, """
-        self.tiles = tiles
+    
+    def __init__(self, tiles, goals, player, boxes):
+        """ tiles is list of lists, with all possible tiles eg TWAL and TPGL. 
+        positions are 2-tuples. 
+        goals and boxes are lists of 2-tuples, player a 2-tuple.
+        """
+        self.tiles = tiles  #  original tiles from level file, used to reset
         self.goals = goals
-        self.start = start
+        self.player = player
         self.boxes = boxes
+        self.occupancy = [
+            [
+                1 if (i, j) in boxes + [player] else 0 
+                for i, _ in enumerate(row)
+                ]
+            for j, row in enumerate(tiles)
+            ]
+            
+    def __repr__(self):
+        tiles = [
+            [
+                tile
+                for i, tile in enumerate(row)
+                ]
+            for j, row in enumerate(self.tiles)
+            ]
+        # TODO: show current level state instead of tiles and/or occupancy
+        return '\n'.join([''.join(row) for row in tiles]) 
         
 
 def find_element(e, l):
@@ -47,8 +69,11 @@ def build_level_from_tiles(tiles):
         print('Level has %d tiles with unrecognized character(s)' % n_wrong)
         return None
      
+    # TODO: replace ' ' by wall unless accessible via flood fill at player start
+    # this should fix rows starting with ' ' or donut-shaped levels 
     # add walls at the beginning and end of short rows
     for i, line in enumerate(tiles):
+        # when floor tiles start a row, they're placeholders for walls
         left_hole = (SIZE - len(line)) // 2
         right_hole = SIZE - len(line) - left_hole 
         tiles[i] = [TWAL] * left_hole + tiles[i] + [TWAL] * right_hole 
@@ -66,7 +91,7 @@ def build_level_from_tiles(tiles):
               % (n_walls, 4 * (SIZE - 1)))
         return None
     
-    # find player start position, and check if missing or too many
+    # find player position, and check if missing or too many
     start = find_element('@', tiles) + find_element('+', tiles) 
     if len(start) != 1:
         print('Level has 0 or >1 player starting positions: %s' % str(start))
@@ -102,7 +127,7 @@ def load_level_set(filepath):
         levels = []
         level_tiles = [] 
         for line in list(f) + ['\n']:  # extra line break for last level
-            if line and line[0] in charset:  # map line
+            if line and line[0] in TILESET:
                 level_tiles.append(list(line.rstrip('\r\n')))
             else:  # empty or comment line
                 if level_tiles:  # we have lines to build from
@@ -123,13 +148,37 @@ def test_find_element():
     
 
 def test_build_level_from_tiles():
+    """ test basic level building """
     tiles = list(map(lambda x:list(x), ['#####', '#@$.#', '#####']))
     level = build_level_from_tiles(tiles)
     assert level is not None
     assert len(level.goals) == 1 and level.goals[0] == (7, 8)
-    assert level.start == (7, 6)
+    assert level.player == (7, 6)
     assert len(level.boxes) == 1 and level.boxes[0] == (7, 7)
 
+    
+def test_build_level_from_tiles2():
+    """ In the level below, test that padding does not shift row 2 to the right.
+    padding should add 4 walls top right and 2 walls bottom right.
+    padding should also add 4 rows of walls at the top, 5 bot, 5 left, 5 right.
+    """
+    level_str = (
+        "####\n"
+        "# .#\n"
+        "#  ###\n"
+        "#*@  #\n"
+        "#  $ #\n"
+        "#  ###\n"
+        "####\n"
+        )
+    tiles = list(map(lambda x:list(x), level_str.split(sep='\n')))
+    level = build_level_from_tiles(tiles)
+    assert level
+    assert level.tiles[4][9] == TWAL # added wall just right of row 1 above
+    assert level.tiles[10][10] == TWAL # added wall 2 times right of row 7
+    assert level.tiles[5][6] == TFLR # row 2's empty floor
+    assert level.tiles[5][7] == TGOL # row 2's goal
+    
 
 def test_load_level_set():
     """ create a levelset file, load set, test set, delete file """
@@ -155,5 +204,7 @@ def test_load_level_set():
 if __name__ == "__main__":
     test_find_element()
     test_build_level_from_tiles()
+#     test_build_level_from_tiles2() # TODO: figure this out
+    # TODO: test level with rows starting with ' ' and holes in them
     test_load_level_set()
     load_level_set('../assets/levels_test.txt')
