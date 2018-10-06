@@ -20,23 +20,19 @@ class Level:
         self.goals = goals
         self.player = player
         self.boxes = boxes
-        self.occupancy = [
-            [
-                1 if (i, j) in boxes + [player] else 0 
-                for i, _ in enumerate(row)
-                ]
-            for j, row in enumerate(tiles)
-            ]
             
     def __repr__(self):
         tiles = [
             [
-                tile
-                for i, tile in enumerate(row)
+                TPGL if (tile == self.player and tile in self.goals) 
+                    else TBGL if tile in self.boxes and tile in self.goals
+                    else TBOX if tile in self.boxes 
+                    else TPLR if tile == self.player
+                    else tile  # wall, empty floor, or empty goal
+                for tile in row
                 ]
-            for j, row in enumerate(self.tiles)
+            for row in self.tiles
             ]
-        # TODO: show current level state instead of tiles and/or occupancy
         return '\n'.join([''.join(row) for row in tiles]) 
         
 
@@ -48,6 +44,24 @@ def find_element(e, l):
     return [ (i, ll.index(e)) for i, ll in enumerate(l) if e in ll ]
 
 
+def flood_fill(tiles, pos, from_values, to_value):
+    """ recursive flood fill https://en.wikipedia.org/wiki/Flood_fill
+    tiles is a square list of lists, tiles[j][i] is row j column i. 
+    pos is a position in tiles to start flooding from.
+    from_values must be a list or set, not a single value.
+    """
+    x, y = pos
+    if y < 0 or y >= len(tiles) or x < 0 or x >= len(tiles[0]):  
+        return  # out of bounds
+    if tiles[y][x] == to_value or tiles[y][x] not in from_values:
+        return  # already filled
+    tiles[y][x] = to_value
+    flood_fill(tiles, (x + 1, y), from_values, to_value)
+    flood_fill(tiles, (x - 1, y), from_values, to_value)
+    flood_fill(tiles, (x, y - 1), from_values, to_value)
+    flood_fill(tiles, (x, y + 1), from_values, to_value)
+
+    
 def build_level_from_tiles(tiles):
     """ tiles is a list of lists of characters. 
     return a Level if tiles are well-formed, None otherwise.
@@ -68,15 +82,14 @@ def build_level_from_tiles(tiles):
     if n_wrong >= 1:
         print('Level has %d tiles with unrecognized character(s)' % n_wrong)
         return None
-     
-    # TODO: replace ' ' by wall unless accessible via flood fill at player start
-    # this should fix rows starting with ' ' or donut-shaped levels 
-    # add walls at the beginning and end of short rows
+    
+    # add walls at the end of short rows
+    tiles = [ line + [TWAL] * (w - len(line)) for line in tiles ]
+    # widen map: add walls evenly on left and right sides to reach max width 
     for i, line in enumerate(tiles):
-        # when floor tiles start a row, they're placeholders for walls
         left_hole = (SIZE - len(line)) // 2
         right_hole = SIZE - len(line) - left_hole 
-        tiles[i] = [TWAL] * left_hole + tiles[i] + [TWAL] * right_hole 
+        tiles[i] = [TWAL] * left_hole + tiles[i] + [TWAL] * right_hole
     # add rows of walls above and below, if necessary
     tiles = [[TWAL] * SIZE] * ((SIZE - h) // 2) + tiles
     tiles = tiles + [[TWAL] * SIZE] * (SIZE - len(tiles))  # remaining missing 
@@ -114,6 +127,14 @@ def build_level_from_tiles(tiles):
         print('Level has fewer boxes than goals')
         return None
     
+    # replace unreachable tiles by walls via flood filling algo
+    reach = [ [0 if tile == TWAL else 1 for tile in row] for row in tiles ]
+    flood_fill(reach, start, [1], 2)  # fill reachable 1s to 2s, 0s stay walls
+    tiles = [ 
+        [tile if reach[j][i] == 2 else TWAL for i, tile in enumerate(row)]
+        for j, row in enumerate(tiles)
+        ]
+         
     return Level(tiles, goals, start, boxes)
     
     
@@ -141,6 +162,19 @@ def load_level_set(filepath):
 ################# TESTS ##################
 
 
+def test_flood_fill():
+    a = [ 
+        [1, 1, 2],
+        [1, 2, 1],
+        [3, 1, 2]
+        ]
+    flood_fill(a, (0, 0), [1, 3], 2)
+    assert a[0][0] == 2
+    assert a[2][0] == 2
+    assert a[2][1] == 2
+    assert a[1][2] == 1  # enclaved 1, should stay 
+
+    
 def test_find_element():
     r = find_element(1, [[3, 2, 1], [4], [0, 1]])
     assert len(r) == 2 and r[0] == (0, 2) and r[1] == (2, 1)
@@ -149,12 +183,14 @@ def test_find_element():
 
 def test_build_level_from_tiles():
     """ test basic level building """
-    tiles = list(map(lambda x:list(x), ['#####', '#@$.#', '#####']))
+    tiles = list(map(lambda x:list(x), ['#####', '#+$ #', '#####']))
     level = build_level_from_tiles(tiles)
     assert level is not None
-    assert len(level.goals) == 1 and level.goals[0] == (7, 8)
+    assert len(level.goals) == 1 
+    assert level.goals[0] == (7, 6)
     assert level.player == (7, 6)
-    assert len(level.boxes) == 1 and level.boxes[0] == (7, 7)
+    assert len(level.boxes) == 1 
+    assert level.boxes[0] == (7, 7)
 
     
 def test_build_level_from_tiles2():
@@ -174,11 +210,30 @@ def test_build_level_from_tiles2():
     tiles = list(map(lambda x:list(x), level_str.split(sep='\n')))
     level = build_level_from_tiles(tiles)
     assert level
-    assert level.tiles[4][9] == TWAL # added wall just right of row 1 above
-    assert level.tiles[10][10] == TWAL # added wall 2 times right of row 7
-    assert level.tiles[5][6] == TFLR # row 2's empty floor
-    assert level.tiles[5][7] == TGOL # row 2's goal
+    assert level.tiles[4][9] == TWAL  # added wall just right of row 1 above
+    assert level.tiles[10][10] == TWAL  # added wall 2 times right of row 7
+    assert level.tiles[5][6] == TFLR  # row 2's empty floor
+    assert level.tiles[5][7] == TGOL  # row 2's goal
     
+
+def test_build_level_from_tiles3():
+    level_str = (
+        "###\n"
+        "#.#\n"  
+        "# # ###\n"   
+        "#$###*#\n"
+        "#     #\n"
+        " ##@ ##\n"  
+        "  ####\n"  
+        )
+    tiles = list(map(lambda x:list(x), level_str.split(sep='\n')))
+    level = build_level_from_tiles(tiles)
+    assert level
+    assert level.tiles[5][5] == TGOL  # short lines dont shift right
+    assert level.tiles[6][7] == TWAL  # test that middle hole gets filled
+    assert level.tiles[9][4] == TWAL  # before-last row's first hole gets filled 
+    assert level.tiles[10][4] == TWAL  # last row's first 2 holes get filled 
+
 
 def test_load_level_set():
     """ create a levelset file, load set, test set, delete file """
@@ -203,8 +258,9 @@ def test_load_level_set():
     
 if __name__ == "__main__":
     test_find_element()
+    test_flood_fill()
     test_build_level_from_tiles()
-#     test_build_level_from_tiles2() # TODO: figure this out
-    # TODO: test level with rows starting with ' ' and holes in them
+    test_build_level_from_tiles2()
+    test_build_level_from_tiles3()
     test_load_level_set()
     load_level_set('../assets/levels_test.txt')
