@@ -1,4 +1,4 @@
-from level_scratch import SIZE, TWAL, TFLR, TGOL
+from level_scratch import TWAL, TFLR, TGOL
 import pview
 import pygame as pg
 
@@ -27,7 +27,7 @@ def map_spr_name_to_img(sheet):
     return sprites
     
     
-def draw_map(level, surf, sprites):
+def draw_level(level, surf, sprites):
     """ draw level onto surf. 
     level is a Level.
     surf is a pygame surface of any size.
@@ -35,7 +35,8 @@ def draw_map(level, surf, sprites):
     """
     surf.fill((0, 0, 0))  # prefill for non-square surf or fullscreen edges
     w, h = surf.get_size()
-    s = min(w // SIZE, h // SIZE)  # this way, no need to use pview.T
+    maxs = len(level.tiles) # assumes level is always square
+    s = min(w // maxs, h // maxs)  # this way, no need to use pview.T
     rect = (s, s, 2 * s, 3 * s)
     pg.draw.rect(surf, (155, 211, 155), rect)
     scaled_sprites = {n: pg.transform.scale(img, (s, s)) 
@@ -48,13 +49,12 @@ def draw_map(level, surf, sprites):
             else:
                 surf.blit(scaled_sprites[TFLR], rect)
 
-    # TODO: draw rest of level
-    # TODO: file with game logic manipulating level state?
 
 ################# TESTS ################## 
 
 
 def test_load_spritesheet():
+    # TODO: test this
     pass
 
 
@@ -62,7 +62,7 @@ def test_draw_level():
     # make a dummy level
     from level_scratch import build_level_from_tiles
     tiles = list(map(lambda x:list(x), ['#####', '#@$.#', '#####']))
-    level = build_level_from_tiles(tiles)
+    level = build_level_from_tiles(tiles,8)
     # load sprites and canvas with pygame
     pg.init()
     BASE_RES = (512, 600)  # should be square, but rectangular here to test
@@ -80,7 +80,7 @@ def test_draw_level():
             if event.type == pg.KEYDOWN and event.key == pg.K_F11:
                 pview.toggle_fullscreen()
         # draw every loop, kinda wasteful
-        draw_map(level, pview.screen, sprites)
+        draw_level(level, pview.screen, sprites)
         pg.display.flip()
 
 

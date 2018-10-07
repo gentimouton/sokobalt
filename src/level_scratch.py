@@ -1,9 +1,15 @@
 import os
 
-SIZE = 16  # max map width and height
 TWAL, TFLR, TGOL = '#', ' ', '.'
 TPLR, TBOX, TPGL, TBGL = '@', '$', '+', '*'
 TILESET = set([TWAL, TFLR, TGOL, TPLR, TBOX, TPGL, TBGL])
+DIRN, DIRS, DIRE, DIRW = 'N', 'S', 'E', 'W'
+DIRMAP = {  # coords are (y,x)
+    DIRN: (-1, 0),
+    DIRS: (1, 0),
+    DIRE: (0, 1),
+    DIRW: (0, -1)
+    }
 
 
 class Level:
@@ -34,8 +40,42 @@ class Level:
             for row in self.tiles
             ]
         return '\n'.join([''.join(row) for row in tiles]) 
+    
+    def is_complete(self):
+        """ true if each goal has a box, false otherwise """
+        free = sum([0 if goal in self.boxes else 1 for goal in self.goals])
+        return free == 0
+    
+    def move(self, d):
+        """ execute move in direction d if possible. 
+        return true if player moved, false otherwise. 
+        does not check for victory condition.
+        """
+        tiles = self.tiles
+        dy, dx = DIRMAP[d]
+        y, x = self.player
+        src = tiles[y][x]
+        d1y, d1x = y + dy, x + dx
+        dest1 = tiles[d1y][d1x]  # walls around. Should be in bounds
         
+        if tiles[d1y][d1x] == TWAL:  # wall: cant move 
+            return False
+        elif (d1y, d1x) in self.boxes:  # box: check if can push 
+            d2y, d2x = y + 2 * dy, x + 2 * dx
+            dest2 = tiles[d2y][d2x]  # beyond the box, should be in bounds
+            if (d2y, d2x) in self.boxes or dest2 == TWAL:  # other box or wall
+                return False
+            else:  # can push box: move the box 
+                tiles[d2y][d2x] = TBGL if dest2 == TGOL else TBOX 
+                tiles[d1y][d1x] = TGOL if dest1 == TBGL else TFLR
+                
+        # whether pushing box or not, move player 
+        tiles[y][x] = TGOL if src == TPGL else TFLR
+        tiles[d1y][d1x] = TPGL if dest1 in (TGOL, TBGL) else TPLR
+        self.player = d1y, d1x 
+        return True
 
+    
 def find_element(e, l):
     """ return the positions of e in l as a list of 2-tuples 
     find_element(1, [[3,2,1],[4],[0,1]]) -> [ (0,2), (2,1) ]
@@ -46,34 +86,36 @@ def find_element(e, l):
 
 def flood_fill(tiles, pos, from_values, to_value):
     """ recursive flood fill https://en.wikipedia.org/wiki/Flood_fill
-    tiles is a square list of lists, tiles[j][i] is row j column i. 
+    tiles must be a rectangular list of lists, tiles[j][i] is row j column i. 
     pos is a position in tiles to start flooding from.
     from_values must be a list or set, not a single value.
     """
-    x, y = pos
+    y, x = pos
     if y < 0 or y >= len(tiles) or x < 0 or x >= len(tiles[0]):  
         return  # out of bounds
     if tiles[y][x] == to_value or tiles[y][x] not in from_values:
         return  # already filled
     tiles[y][x] = to_value
-    flood_fill(tiles, (x + 1, y), from_values, to_value)
-    flood_fill(tiles, (x - 1, y), from_values, to_value)
-    flood_fill(tiles, (x, y - 1), from_values, to_value)
-    flood_fill(tiles, (x, y + 1), from_values, to_value)
+    flood_fill(tiles, (y, x + 1), from_values, to_value)
+    flood_fill(tiles, (y, x - 1), from_values, to_value)
+    flood_fill(tiles, (y - 1, x), from_values, to_value)
+    flood_fill(tiles, (y + 1, x), from_values, to_value)
 
     
-def build_level_from_tiles(tiles):
+def build_level_from_tiles(tiles, maxs=16):
     """ tiles is a list of lists of characters. 
-    return a Level if tiles are well-formed, None otherwise.
+    maxs is max size of level output. 
+    return a square Level if tiles are well-formed, None otherwise.
     Well-formed tiles means: 
-    - max width and height of 16, supporting walls all around the periphery,
+    - widest row and tallest column are less than max size, 
+    - enough room to support walls all around the periphery,
     - the number of boxes is at least the number of goals,
     - must have 1+ box, 1+ empty goal, and exactly 1 player,
     - each tile must be in the supported tileset '@.#*$ '
     """
     w = max(map(lambda x:len(x), tiles))
     h = len(tiles)
-    if w > SIZE or h > SIZE:  # too wide or too tall
+    if w > maxs or h > maxs:  # too wide or too tall
         print('Level is too wide or too tall: %d,%d' % (w, h))
         return None
     
@@ -87,21 +129,21 @@ def build_level_from_tiles(tiles):
     tiles = [ line + [TWAL] * (w - len(line)) for line in tiles ]
     # widen map: add walls evenly on left and right sides to reach max width 
     for i, line in enumerate(tiles):
-        left_hole = (SIZE - len(line)) // 2
-        right_hole = SIZE - len(line) - left_hole 
+        left_hole = (maxs - len(line)) // 2
+        right_hole = maxs - len(line) - left_hole 
         tiles[i] = [TWAL] * left_hole + tiles[i] + [TWAL] * right_hole
     # add rows of walls above and below, if necessary
-    tiles = [[TWAL] * SIZE] * ((SIZE - h) // 2) + tiles
-    tiles = tiles + [[TWAL] * SIZE] * (SIZE - len(tiles))  # remaining missing 
+    tiles = [[TWAL] * maxs] * ((maxs - h) // 2) + tiles
+    tiles = tiles + [[TWAL] * maxs] * (maxs - len(tiles))  # remaining missing 
     
     # check that there are walls all around the periphery
     n_walls = sum([1 if e == TWAL else 0 for e in tiles[0]])
     n_walls += sum([1 if row[0] == TWAL else 0 for row in tiles[1:-1]])
     n_walls += sum([1 if row[-1] == TWAL else 0 for row in tiles[1:-1]])
     n_walls += sum([1 if e == TWAL else 0 for e in tiles[-1]])
-    if n_walls != 4 * (SIZE - 1):
+    if n_walls != 4 * (maxs - 1):
         print('Level has %d peripheral walls, need %d' 
-              % (n_walls, 4 * (SIZE - 1)))
+              % (n_walls, 4 * (maxs - 1)))
         return None
     
     # find player position, and check if missing or too many
@@ -138,7 +180,7 @@ def build_level_from_tiles(tiles):
     return Level(tiles, goals, start, boxes)
     
     
-def load_level_set(filepath):
+def load_level_set(filepath, maxs=16):
     """ return list of levels, or None if cant load the file """
     if not os.path.isfile(filepath):
         print('could not find file %s' % filepath)
@@ -152,10 +194,10 @@ def load_level_set(filepath):
                 level_tiles.append(list(line.rstrip('\r\n')))
             else:  # empty or comment line
                 if level_tiles:  # we have lines to build from
-                    level = build_level_from_tiles(level_tiles)
+                    level = build_level_from_tiles(level_tiles, maxs)
                     if level:  # well-formed level
                         levels.append(level)
-                level_tiles = []
+                    level_tiles = []
     
     return levels
 
@@ -186,7 +228,7 @@ def test_find_element():
 def test_build_level_from_tiles():
     """ test basic level building """
     tiles = list(map(lambda x:list(x), ['#####', '#+$ #', '#####']))
-    level = build_level_from_tiles(tiles)
+    level = build_level_from_tiles(tiles, 16)
     assert level is not None
     assert len(level.goals) == 1 
     assert level.goals[0] == (7, 6)
@@ -210,7 +252,7 @@ def test_build_level_from_tiles2():
         "####\n"
         )
     tiles = list(map(lambda x:list(x), level_str.split(sep='\n')))
-    level = build_level_from_tiles(tiles)
+    level = build_level_from_tiles(tiles, 16)
     assert level
     assert level.tiles[4][9] == TWAL  # added wall just right of row 1 above
     assert level.tiles[10][10] == TWAL  # added wall 2 times right of row 7
@@ -229,7 +271,7 @@ def test_build_level_from_tiles3():
         "  ####\n"  
         )
     tiles = list(map(lambda x:list(x), level_str.split(sep='\n')))
-    level = build_level_from_tiles(tiles)
+    level = build_level_from_tiles(tiles, 16)
     assert level
     assert level.tiles[5][5] == TGOL  # short lines dont shift right
     assert level.tiles[6][7] == TWAL  # test that middle hole gets filled
@@ -247,17 +289,44 @@ def test_load_level_set():
         f.write('level 1\n' + level1 + '\r\n')
         f.write('level 2\n' + level2)
     # load and test set
-    levels = load_level_set(filename)
+    maxs = 16
+    levels = load_level_set(filename, maxs)
     assert len(levels) == 2  # detected 2 well-formed levels
-    assert levels[0] and len(levels[0].tiles) == SIZE
-    assert levels[1] and len(levels[1].tiles) == SIZE
+    assert levels[0] and len(levels[0].tiles) == maxs
+    assert levels[1] and len(levels[1].tiles) == maxs
     # delete file
     try:
         os.remove(filename)
     except OSError:
         pass
     
+
+def test_moves():
+    """ build a level, make 4 moves, check game is over """ 
+    tiles = [
+        "########",
+        "########",
+        "##    ##",
+        "##@.$ ##",
+        "##   *##",
+        "########",
+        "########",
+        "########"
+        ]
+    tiles = list(map(lambda r: list(r), tiles))
+    level = Level(tiles, [(4, 3), (4, 5)], (3, 2), [(3, 4), (4, 5)])
+    level.move(DIRN)
+    level.move(DIRE)
+    level.move(DIRE)
+    level.move(DIRE)
+    level.move(DIRE)  # bump into wall
+    level.move(DIRS)
+    level.move(DIRS)  # bump into box blocked by wall
+    level.move(DIRW)
+    assert level.goals == level.boxes
+    assert level.player == (4, 4)
     
+
 if __name__ == "__main__":
     test_find_element()
     test_flood_fill()
@@ -265,4 +334,7 @@ if __name__ == "__main__":
     test_build_level_from_tiles2()
     test_build_level_from_tiles3()
     test_load_level_set()
-    load_level_set('../assets/levels_test.txt')
+    
+    test_moves()
+#     levels = load_level_set('../assets/levels_test.txt', 8)
+    
