@@ -68,6 +68,8 @@ class Level:
             else:  # can push box: move the box 
                 tiles[d2y][d2x] = TBGL if dest2 == TGOL else TBOX 
                 tiles[d1y][d1x] = TGOL if dest1 == TBGL else TFLR
+                i = self.boxes.index((d1y, d1x))
+                self.boxes[i] = (d2y, d2x)
                 
         # whether pushing box or not, move player 
         tiles[y][x] = TGOL if src == TPGL else TFLR
@@ -314,7 +316,7 @@ def test_moves():
         "########"
         ]
     tiles = list(map(lambda r: list(r), tiles))
-    level = Level(tiles, [(4, 3), (4, 5)], (3, 2), [(3, 4), (4, 5)])
+    level = Level(tiles, [(3, 3), (4, 5)], (3, 2), [(3, 4), (4, 5)])
     level.move(DIRN)
     level.move(DIRE)
     level.move(DIRE)
@@ -324,7 +326,7 @@ def test_moves():
     level.move(DIRS)  # bump into box blocked by wall
     level.move(DIRW)
     assert level.goals == level.boxes
-    assert level.player == (4, 4)
+    assert level.player == (3, 4)
     
 
 if __name__ == "__main__":
