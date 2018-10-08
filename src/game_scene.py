@@ -4,14 +4,11 @@ Can also pause game and go to main menu, passing an option to resume game.
 """
 
 from constants import BTN_DOWN, BTN_UP, BTN_LEFT, BTN_RIGHT
-from constants import CMD_NEWG, CMD_RESM
 from controls import controller
 from level import Level
-from pview import T
 import pview
 import pygame as pg
 from scene import Scene
-from settings import BASE_RES
 
 
 class GameScene(Scene):
@@ -29,17 +26,13 @@ class GameScene(Scene):
 
     def resume(self, **kwargs):
         """ Scene callback. Called from the menu scene via scene manager. """
-#         if kwargs['cmd'] == CMD_NEWG:
-#             self._build_new_game()
-#         elif kwargs['cmd'] == CMD_RESM:
-#             pass
         pass
 
     def _build_new_game(self):
         """ load images and sounds from disk here """
-        # build level
-        self.level = Level()
-        self.bg = self.level.pre_render_map()
+#         self.level = Level()
+#         self.bg = self.level.pre_render_map()
+        self.bg = pg.surface.Surface((200, 200)) # TODO: tie level here
         
     def _draw(self):
         pview.fill((0, 155, 155))
@@ -48,12 +41,13 @@ class GameScene(Scene):
         pg.display.flip()
     
     def redraw(self):
-        self.bg = self.level.pre_render_map()
+        # TODO: scale level bg
         self._draw()
         
         
 if __name__ == "__main__":
     from constants import OUT_QUIT, OUT_FSCR
+    from settings import BASE_RES
     pg.init()
     pview.set_mode((BASE_RES, BASE_RES))
     clock = pg.time.Clock()

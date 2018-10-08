@@ -1,4 +1,4 @@
-from level_scratch import TWAL, TFLR, TGOL
+from level import TWAL, TFLR, TGOL
 import pview
 import pygame as pg
 
@@ -35,7 +35,7 @@ def draw_level(level, surf, sprites):
     """
     surf.fill((0, 0, 0))  # prefill for non-square surf or fullscreen edges
     w, h = surf.get_size()
-    maxs = len(level.tiles) # assumes level is always square
+    maxs = len(level.tiles)  # assumes level is always square
     s = min(w // maxs, h // maxs)  # this way, no need to use pview.T
     rect = (s, s, 2 * s, 3 * s)
     pg.draw.rect(surf, (155, 211, 155), rect)
@@ -49,20 +49,47 @@ def draw_level(level, surf, sprites):
             else:
                 surf.blit(scaled_sprites[TFLR], rect)
 
-
 ################# TESTS ################## 
 
 
 def test_load_spritesheet():
-    # TODO: test this
-    pass
+    import os
+    s = 20
+    filename = 'tmp_img.test'
+    # make a dummy spritesheet file
+    surf = pg.surface.Surface((s * 2, s))
+    surf.fill((255, 0, 0), (0, 0, s, s))  # first spr is red square
+    surf.fill((0, 255, 0), (s, 0, s, s))  # second is green square
+    pg.image.save(surf, filename)
+    # read file as spritesheet
+    # TODO: 
+    # test sprite sizes and colors
+    # TODO:    
+    # delete file
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
+    
+
 
 
 def test_draw_level():
     # make a dummy level
-    from level_scratch import build_level_from_tiles
-    tiles = list(map(lambda x:list(x), ['#####', '#@$.#', '#####']))
-    level = build_level_from_tiles(tiles,8)
+    from level import Level
+    tiles = [
+        "########",
+        "########",
+        "##    ##",
+        "##@.$ ##",
+        "##   *##",
+        "########",
+        "########",
+        "########"
+        ]
+    tiles = list(map(lambda r: list(r), tiles))
+    level = Level(tiles, [(3, 3), (4, 5)], (3, 2), [(3, 4), (4, 5)])
+    
     # load sprites and canvas with pygame
     pg.init()
     BASE_RES = (512, 600)  # should be square, but rectangular here to test
@@ -86,4 +113,4 @@ def test_draw_level():
 
 if __name__ == "__main__":
     test_draw_level()  # press ESC or F11
-    
+    # test_load_spritesheet() # TODO: 
