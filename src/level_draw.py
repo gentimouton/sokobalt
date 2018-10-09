@@ -1,30 +1,33 @@
-from level import TWAL, TFLR, TGOL
+from level import TWAL, TFLR, TGOL, TBGL, TPGL
 import pview
 import pygame as pg
 
+
+# colorkey of sprites 
 TRANSPARENT = (255, 0, 255)
 
+# spritesheet constants
+SWAL, SFLR, SGOL = 'wall', 'floor', 'goal'
+SBOX, SPLR, SNON = 'box', 'player', 'none'
+SPLE, SPLW = 'player east', 'player west'
+SPLS, SPLN = 'player south', 'player north' 
+SDNC, SDNS = 'player dance1', 'player dance2'
 
-def load_spritesheet(filename, s):
+
+def load_spritesheet(filename, spr_order, s):
     """ Generic spritesheet loader. 
     File should have square sprites of size s.
-    returns flattened list of img
+    spr_order is the order of sprites in the file, flattened. 
+    Use SNON to in spr_order to skip slots with no sprite. 
+    returns a mapping of spr_constant to img
     """
     img = pg.image.load(filename).convert()
     img.set_colorkey(TRANSPARENT, pg.RLEACCEL)
     ntiles_w, ntiles_h = img.get_width() // s, img.get_height() // s
     sheet = [img.subsurface((x * s, y * s, s, s)) 
              for y in range(ntiles_h) for x in range(ntiles_w)]
-    return sheet
-
-
-def map_spr_name_to_img(sheet):
-    """ Map each sprite name to its image.  
-    sheet is a list of img. Return a dict. 
-    """
-    spr_names = [TWAL, TFLR, TGOL]  # expected order from the sheet 
-    sprites = dict(zip(spr_names, sheet[:len(spr_names)]))
-    return sprites
+    d = dict(zip(spr_order, sheet[:len(spr_order)]))
+    return d
     
     
 def draw_level(level, surf, sprites):
@@ -41,14 +44,24 @@ def draw_level(level, surf, sprites):
     pg.draw.rect(surf, (155, 211, 155), rect)
     scaled_sprites = {n: pg.transform.scale(img, (s, s)) 
                       for n, img in sprites.items()}
+    # draw background
     for y, row in enumerate(level.tiles):
         for x, tile in enumerate(row):
             rect = [x * s, y * s, s, s]
-            if tile in (TWAL, TGOL):
-                surf.blit(scaled_sprites[tile], rect) 
+            if tile == TWAL:
+                surf.blit(scaled_sprites[SWAL], rect)
+            elif tile in (TGOL, TBGL, TPGL):
+                surf.blit(scaled_sprites[SGOL], rect)
             else:
-                surf.blit(scaled_sprites[TFLR], rect)
-
+                surf.blit(scaled_sprites[SFLR], rect)
+    # draw player and boxes
+    y, x = level.player
+    rect = [s * x, s * y, s, s]
+    surf.blit(scaled_sprites[SPLR], rect)
+    for (y, x) in level.boxes:
+        rect = [s * x, s * y, s, s]
+        surf.blit(scaled_sprites[SBOX], rect)
+    
 ################# TESTS ################## 
 
 
@@ -70,8 +83,6 @@ def test_load_spritesheet():
         os.remove(filename)
     except OSError:
         pass
-    
-
 
 
 def test_draw_level():
@@ -94,8 +105,12 @@ def test_draw_level():
     pg.init()
     BASE_RES = (512, 600)  # should be square, but rectangular here to test
     pview.set_mode(BASE_RES)
-    sheet = load_spritesheet('../assets/sokobalt_tilesheet_8px.png', 8)
-    sprites = map_spr_name_to_img(sheet)
+    
+    # sheet and expected order of images, flattened
+    spr_order = [SWAL, SFLR, SGOL, SBOX, SPLR, SNON,
+                 SPLE, SPLW, SPLS, SPLN, SDNC, SDNS]
+    sprites = load_spritesheet('../assets/sokobalt_tilesheet_8px.png',
+                             spr_order, 8)
     
     done = False
     while not done:
