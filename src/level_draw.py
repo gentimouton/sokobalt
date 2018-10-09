@@ -1,4 +1,4 @@
-from level import TWAL, TFLR, TGOL, TBGL, TPGL
+from level import TWAL, TGOL, TBGL, TPGL
 import pview
 import pygame as pg
 
@@ -19,7 +19,7 @@ def load_spritesheet(filename, spr_order, s):
     File should have square sprites of size s.
     spr_order is the order of sprites in the file, flattened. 
     Use SNON to in spr_order to skip slots with no sprite. 
-    returns a mapping of spr_constant to img
+    returns a mapping of SWAL, SFLR, etc to their image
     """
     img = pg.image.load(filename).convert()
     img.set_colorkey(TRANSPARENT, pg.RLEACCEL)
@@ -67,18 +67,25 @@ def draw_level(level, surf, sprites):
 
 def test_load_spritesheet():
     import os
+    pg.init()
     s = 20
-    filename = 'tmp_img.test'
+    filename = 'tmp_img.test.png'
     # make a dummy spritesheet file
     surf = pg.surface.Surface((s * 2, s))
     surf.fill((255, 0, 0), (0, 0, s, s))  # first spr is red square
     surf.fill((0, 255, 0), (s, 0, s, s))  # second is green square
+    spr_order = ['red', 'blue']
     pg.image.save(surf, filename)
-    # read file as spritesheet
-    # TODO: 
+    # prepare a display, so the spritesheet can be converted to display surf
+    pg.display.set_mode((100, 100))
+    sprites = load_spritesheet(filename, spr_order, s)  # read spritesheet
     # test sprite sizes and colors
-    # TODO:    
-    # delete file
+    assert len(sprites) == 2
+    assert 'red' in sprites.keys()
+    assert sprites['red'].get_size() == (s, s)
+    assert  sprites['red'].get_at((0, 0)) == (255, 0, 0)
+    # tear down
+    pg.quit()
     try:
         os.remove(filename)
     except OSError:
@@ -103,14 +110,14 @@ def test_draw_level():
     
     # load sprites and canvas with pygame
     pg.init()
-    BASE_RES = (512, 600)  # should be square, but rectangular here to test
+    BASE_RES = (512, 600)  # rectangular to test uncolored area
     pview.set_mode(BASE_RES)
     
     # sheet and expected order of images, flattened
+    filename = '../assets/sokobalt_tilesheet_8px.png'
     spr_order = [SWAL, SFLR, SGOL, SBOX, SPLR, SNON,
                  SPLE, SPLW, SPLS, SPLN, SDNC, SDNS]
-    sprites = load_spritesheet('../assets/sokobalt_tilesheet_8px.png',
-                             spr_order, 8)
+    sprites = load_spritesheet(filename, spr_order, 8)
     
     done = False
     while not done:
@@ -124,8 +131,12 @@ def test_draw_level():
         # draw every loop, kinda wasteful
         draw_level(level, pview.screen, sprites)
         pg.display.flip()
+    
+    # tear down
+    pg.quit()
 
 
 if __name__ == "__main__":
+    test_load_spritesheet()   
     test_draw_level()  # press ESC or F11
-    # test_load_spritesheet() # TODO: 
+    
