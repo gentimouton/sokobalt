@@ -6,8 +6,21 @@ OUT_NONE, OUT_QUIT, OUT_FSCR = 'none', 'quit', 'fullscreen'
 CMD_NEWG, CMD_RESM, CMD_SHWR = 'new game', 'resume game', 'show resume'
 
 # buttons
-BTN_SLCT, BTN_UP, BTN_DOWN = 'select', 'up', 'down',
-BTN_LEFT, BTN_RIGHT = 'left', 'right'
+BSLC, BUPP, BDWN, BLFT, BRGT = 'select', 'up', 'down', 'left', 'right'
 
-# map tile values
-TWAL, TFLR, TGOL = 'wall', 'floor', 'goal'
+# colorkey of sprites 
+TRANSPARENT = (255, 0, 255)
+
+# spritesheet constants
+SWAL, SFLR, SGOL = 'wall', 'floor', 'goal'
+SBOX, SPLR, SNON = 'box', 'player', 'none'
+SPLE, SPLW, SPLS, SPLN = 'face east', 'face west', 'face south', 'face north'
+SDNC, SDNS = 'dance1', 'dance2'
+# sprites must be in this order in the spritesheet
+SPR_ORDER = [
+    SWAL, SFLR, SGOL, SBOX, SPLR, SNON,
+    SPLE, SPLW, SPLS, SPLN, SDNC, SDNS
+    ]
+
+# all possible directions
+DIRN, DIRS, DIRE, DIRW = 'N', 'S', 'E', 'W'

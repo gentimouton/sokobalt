@@ -1,17 +1,7 @@
+from constants import TRANSPARENT, SWAL, SGOL, SFLR, SPLR, SBOX, SPR_ORDER
 from level import TWAL, TGOL, TBGL, TPGL
 import pview
 import pygame as pg
-
-
-# colorkey of sprites 
-TRANSPARENT = (255, 0, 255)
-
-# spritesheet constants
-SWAL, SFLR, SGOL = 'wall', 'floor', 'goal'
-SBOX, SPLR, SNON = 'box', 'player', 'none'
-SPLE, SPLW = 'player east', 'player west'
-SPLS, SPLN = 'player south', 'player north' 
-SDNC, SDNS = 'player dance1', 'player dance2'
 
 
 def load_spritesheet(filename, spr_order, s):
@@ -115,9 +105,7 @@ def test_draw_level():
     
     # sheet and expected order of images, flattened
     filename = '../assets/sokobalt_tilesheet_8px.png'
-    spr_order = [SWAL, SFLR, SGOL, SBOX, SPLR, SNON,
-                 SPLE, SPLW, SPLS, SPLN, SDNC, SDNS]
-    sprites = load_spritesheet(filename, spr_order, 8)
+    sprites = load_spritesheet(filename, SPR_ORDER, 8)
     
     done = False
     while not done:

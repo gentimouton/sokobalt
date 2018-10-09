@@ -1,9 +1,13 @@
 import os
 
+from constants import DIRN, DIRS, DIRE, DIRW
+
+
+# sokoban file format: characters and their meaning
 TWAL, TFLR, TGOL = '#', ' ', '.'
 TPLR, TBOX, TPGL, TBGL = '@', '$', '+', '*'
 TILESET = set([TWAL, TFLR, TGOL, TPLR, TBOX, TPGL, TBGL])
-DIRN, DIRS, DIRE, DIRW = 'N', 'S', 'E', 'W'
+
 DIRMAP = {  # coords are (y,x)
     DIRN: (-1, 0),
     DIRS: (1, 0),

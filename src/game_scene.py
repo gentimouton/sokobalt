@@ -3,24 +3,36 @@ If game state is lost, call game over scene.
 Can also pause game and go to main menu, passing an option to resume game.
 """
 
-from constants import BTN_DOWN, BTN_UP, BTN_LEFT, BTN_RIGHT
+from constants import BDWN, BUPP, BLFT, BRGT, SPR_ORDER, DIRN, DIRS, DIRE, DIRW
 from controls import controller
-from level import Level
+from level import load_level_set
+from level_draw import load_spritesheet, draw_level
 import pview
 import pygame as pg
 from scene import Scene
+from settings import SHEET_FILENAME, LEVELS_FILENAME, LEVELS_MAXSIZE, SPR_SIZE
 
 
 class GameScene(Scene):
 
     def __init__(self):
-        self._build_new_game()
+        # load spritesheet
+        self.sprites = load_spritesheet(SHEET_FILENAME, SPR_ORDER, SPR_SIZE)
+        # load level set  
+        self.levels = load_level_set(LEVELS_FILENAME, LEVELS_MAXSIZE)  # list
+        self.level = self.levels[0]
         
     def tick(self, ms):
-        """ process player inputs """
-        if controller.btn_ispressed(BTN_UP):
-            pass
-              
+        """ process player inputs and draw """
+        if controller.btn_event(BUPP):
+            self.level.move(DIRN)
+        if controller.btn_event(BDWN):
+            self.level.move(DIRS)
+        if controller.btn_event(BLFT):
+            self.level.move(DIRW)
+        if controller.btn_event(BRGT):
+            self.level.move(DIRE)
+        
         self._draw()
         return None, {}
 
@@ -28,21 +40,17 @@ class GameScene(Scene):
         """ Scene callback. Called from the menu scene via scene manager. """
         pass
 
-    def _build_new_game(self):
-        """ load images and sounds from disk here """
-#         self.level = Level()
-#         self.bg = self.level.pre_render_map()
-        self.bg = pg.surface.Surface((200, 200)) # TODO: tie level here
-        
     def _draw(self):
-        pview.fill((0, 155, 155))
-        # pg.draw.rect(pview.screen, (200, 0, 0), T(20, 20, 100, 200))
-        pview.screen.blit(self.bg, (0, 0))
+        # TODO: DirtySprite for player and fixed surf for bg
+        pview.fill((0, 155, 155)) # unnecessary?
+        draw_level(self.level, pview.screen, self.sprites)
+#         pview.screen.blit(self.bg, (0, 0))
         pg.display.flip()
     
     def redraw(self):
-        # TODO: scale level bg
-        self._draw()
+        # TODO: recompute/redraw bg
+#         self._draw()
+        pass
         
         
 if __name__ == "__main__":
