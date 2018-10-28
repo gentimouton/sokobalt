@@ -20,7 +20,12 @@ class GameScene(Scene):
         self.sprites = load_spritesheet(SHEET_FILENAME, SPR_ORDER, SPR_SIZE)
         # load level set  
         self.levels = load_level_set(LEVELS_FILENAME, LEVELS_MAXSIZE)  # list
-        self.level = self.levels[0]
+        self.cur_level = 0
+        self.start_level()
+        
+    def start_level(self):
+        self.level = self.levels[self.cur_level]
+        self.level.reset()
         
     def tick(self, ms):
         """ process player inputs and draw """
@@ -32,6 +37,12 @@ class GameScene(Scene):
             self.level.move(DIRW)
         if controller.btn_event(BRGT):
             self.level.move(DIRE)
+        
+        if self.level.is_complete():
+            # TODO: dance
+            # load next level
+            self.cur_level = (self.cur_level+1) % len(self.levels)
+            self.start_level()
         
         self._draw()
         return None, {}

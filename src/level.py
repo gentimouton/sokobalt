@@ -1,7 +1,6 @@
 import os
-
+from copy import deepcopy
 from constants import DIRN, DIRS, DIRE, DIRW
-
 
 # sokoban file format: characters and their meaning
 TWAL, TFLR, TGOL = '#', ' ', '.'
@@ -26,10 +25,11 @@ class Level:
         positions are 2-tuples. 
         goals and boxes are lists of 2-tuples, player a 2-tuple.
         """
-        self.tiles = tiles  #  original tiles from level_old file, used to reset
-        self.goals = goals
-        self.player = player
-        self.boxes = boxes
+        self.base_tiles = tiles  #  use these to reset level
+        self.base_goals = goals
+        self.base_player = player
+        self.base_boxes = boxes
+        self.reset()
             
     def __repr__(self):
         tiles = [
@@ -50,6 +50,14 @@ class Level:
         free = sum([0 if goal in self.boxes else 1 for goal in self.goals])
         return free == 0
     
+    def reset(self):
+        """ prepare mutable game state """
+        self.tiles = deepcopy(self.base_tiles)
+        self.goals = deepcopy(self.base_goals)
+        self.player = deepcopy(self.base_player)
+        self.boxes = deepcopy(self.base_boxes)
+
+        
     def move(self, d):
         """ execute move in direction d if possible. 
         return true if player moved, false otherwise. 
@@ -82,6 +90,7 @@ class Level:
         return True
 
     
+
 def find_element(e, l):
     """ return the positions of e in l as a list of 2-tuples 
     find_element(1, [[3,2,1],[4],[0,1]]) -> [ (0,2), (2,1) ]
@@ -107,10 +116,11 @@ def flood_fill(tiles, pos, from_values, to_value):
     flood_fill(tiles, (y - 1, x), from_values, to_value)
     flood_fill(tiles, (y + 1, x), from_values, to_value)
 
-    
+
+
 def build_level_from_tiles(tiles, maxs=16):
     """ tiles is a list of lists of characters. 
-    maxs is max size of level_old output. 
+    maxs is max size of level output. 
     return a square Level if tiles are well-formed, None otherwise.
     Well-formed tiles means: 
     - widest row and tallest column are less than max size, 
@@ -195,13 +205,13 @@ def load_level_set(filepath, maxs=16):
     with open(filepath, 'r') as f:
         levels = []
         level_tiles = [] 
-        for line in list(f) + ['\n']:  # extra line break for last level_old
+        for line in list(f) + ['\n']:  # extra line break for last level
             if line and line[0] in TILESET:
                 level_tiles.append(list(line.rstrip('\r\n')))
             else:  # empty or comment line
                 if level_tiles:  # we have lines to build from
                     level = build_level_from_tiles(level_tiles, maxs)
-                    if level:  # well-formed level_old
+                    if level:  # well-formed level
                         levels.append(level)
                     level_tiles = []
     
@@ -230,9 +240,9 @@ def test_find_element():
     assert len(r) == 2 and r[0] == (0, 2) and r[1] == (2, 1)
     assert find_element(0, []) == []
     
-
+    
 def test_build_level_from_tiles():
-    """ test basic level_old building """
+    """ test basic level building """
     tiles = list(map(lambda x:list(x), ['#####', '#+$ #', '#####']))
     level = build_level_from_tiles(tiles, 16)
     assert level is not None
@@ -244,7 +254,7 @@ def test_build_level_from_tiles():
 
     
 def test_build_level_from_tiles2():
-    """ In the level_old below, test that padding does not shift row 2 to the right.
+    """ In the level below, test that padding does not shift row 2 to the right.
     padding should add 4 walls top right and 2 walls bottom right.
     padding should also add 4 rows of walls at the top, 5 bot, 5 left, 5 right.
     """
@@ -267,6 +277,7 @@ def test_build_level_from_tiles2():
     
 
 def test_build_level_from_tiles3():
+    """ Test that short lines dont shift right, and middle holes get filled. """
     level_str = (
         "###\n"
         "#.#\n"  
@@ -292,8 +303,8 @@ def test_load_level_set():
     with open(filename, 'w') as f:
         level1 = '\n'.join(['#####', '#@$.#', '#####'])
         level2 = '\n'.join(['#####', '#+ $#', '#$.*#', '#####'])
-        f.write('level_old 1\n' + level1 + '\r\n')
-        f.write('level_old 2\n' + level2)
+        f.write('level 1\n' + level1 + '\r\n')
+        f.write('level 2\n' + level2)
     # load and test set
     maxs = 16
     levels = load_level_set(filename, maxs)
@@ -308,7 +319,7 @@ def test_load_level_set():
     
 
 def test_moves():
-    """ build a level_old, make 4 moves, check game is over """ 
+    """ build a level, make 4 moves, check game is over """ 
     tiles = [
         "########",
         "########",

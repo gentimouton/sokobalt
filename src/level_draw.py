@@ -9,7 +9,7 @@ def load_spritesheet(filename, spr_order, s):
     File should have square sprites of size s.
     spr_order is the order of sprites in the file, flattened. 
     Use SNON to in spr_order to skip slots with no sprite. 
-    returns a mapping of SWAL, SFLR, etc to their image
+    returns a mapping of sprite names to sprite images
     """
     img = pg.image.load(filename).convert()
     img.set_colorkey(TRANSPARENT, pg.RLEACCEL)
@@ -51,6 +51,7 @@ def draw_level(level, surf, sprites):
     for (y, x) in level.boxes:
         rect = [s * x, s * y, s, s]
         surf.blit(scaled_sprites[SBOX], rect)
+    
     
 ################# TESTS ################## 
 
