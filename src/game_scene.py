@@ -3,7 +3,8 @@ If game state is lost, call game over scene.
 Can also pause game and go to main menu, passing an option to resume game.
 """
 
-from constants import BDWN, BUPP, BLFT, BRGT, SPR_ORDER, DIRN, DIRS, DIRE, DIRW
+from constants import BDWN, BUPP, BLFT, BRGT, BSLC
+from constants import SPR_ORDER, DIRN, DIRS, DIRE, DIRW
 from controls import controller
 from level import load_level_set
 from level_draw import load_spritesheet, draw_level
@@ -37,11 +38,13 @@ class GameScene(Scene):
             self.level.move(DIRW)
         if controller.btn_event(BRGT):
             self.level.move(DIRE)
+        if controller.btn_event(BSLC):
+            self.start_level()
         
         if self.level.is_complete():
             # TODO: dance
             # load next level
-            self.cur_level = (self.cur_level+1) % len(self.levels)
+            self.cur_level = (self.cur_level + 1) % len(self.levels)
             self.start_level()
         
         self._draw()
@@ -53,10 +56,12 @@ class GameScene(Scene):
 
     def _draw(self):
         # TODO: DirtySprite for player and fixed surf for bg
-        pview.fill((0, 155, 155)) # unnecessary?
+        pview.fill((0, 155, 155))  # unnecessary?
         draw_level(self.level, pview.screen, self.sprites)
 #         pview.screen.blit(self.bg, (0, 0))
         pg.display.flip()
+        # TODO: right-side HUD tracking steps and current level number
+        # TODO: level navigator menu (can replay any unlocked one)
     
     def redraw(self):
         # TODO: recompute/redraw bg

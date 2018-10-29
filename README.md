@@ -13,6 +13,7 @@ Similar projects
 
 From http://sokobano.de/wiki/index.php?title=Level_format
 and http://sneezingtiger.com/sokoban/levels.html
+and http://www.sourcecode.se/sokoban/levels
 
 |symbol|description|
 |---|---|

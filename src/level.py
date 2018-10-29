@@ -56,7 +56,6 @@ class Level:
         self.goals = deepcopy(self.base_goals)
         self.player = deepcopy(self.base_player)
         self.boxes = deepcopy(self.base_boxes)
-
         
     def move(self, d):
         """ execute move in direction d if possible. 
@@ -88,15 +87,17 @@ class Level:
         tiles[d1y][d1x] = TPGL if dest1 in (TGOL, TBGL) else TPLR
         self.player = d1y, d1x 
         return True
-
     
 
 def find_element(e, l):
-    """ return the positions of e in l as a list of 2-tuples 
+    """ return the positions of e in l as a list of 2-tuples
+    l must be a list of sublists.
+    e is an element potentially present in the sublists. 
     find_element(1, [[3,2,1],[4],[0,1]]) -> [ (0,2), (2,1) ]
     find_element(1, []) -> []
+    find_element(1, [ [1,1], [1] ]) -> [ (0,0), (0,1), (1,0) ] 
     """
-    return [ (i, ll.index(e)) for i, ll in enumerate(l) if e in ll ]
+    return [(i, j) for i, ll in enumerate(l) for j, ee in enumerate(ll) if e == ee]
 
 
 def flood_fill(tiles, pos, from_values, to_value):
@@ -115,7 +116,6 @@ def flood_fill(tiles, pos, from_values, to_value):
     flood_fill(tiles, (y, x - 1), from_values, to_value)
     flood_fill(tiles, (y - 1, x), from_values, to_value)
     flood_fill(tiles, (y + 1, x), from_values, to_value)
-
 
 
 def build_level_from_tiles(tiles, maxs=16):
@@ -160,12 +160,14 @@ def build_level_from_tiles(tiles, maxs=16):
     if n_walls != 4 * (maxs - 1):
         print('Level has %d peripheral walls, need %d' 
               % (n_walls, 4 * (maxs - 1)))
+        print(tiles)
         return None
     
     # find player position, and check if missing or too many
     start = find_element('@', tiles) + find_element('+', tiles) 
     if len(start) != 1:
         print('Level has 0 or >1 player starting positions: %s' % str(start))
+        print(tiles)
         return None    
     start = start[0]
     
@@ -173,6 +175,7 @@ def build_level_from_tiles(tiles, maxs=16):
     goals = find_element('.', tiles) + find_element('+', tiles)
     if not goals:
         print('Level has all its goals fulfilled already')
+        print(tiles)
         return None 
     goals = goals + find_element('*', tiles)  # add goals with boxes on them 
     
@@ -180,9 +183,11 @@ def build_level_from_tiles(tiles, maxs=16):
     boxes = find_element('$', tiles) + find_element('*', tiles)
     if not boxes:
         print('Level has no box to move')
+        print(tiles)
         return None
     if len(boxes) < len(goals):
         print('Level has fewer boxes than goals')
+        print(tiles)
         return None
     
     # replace unreachable tiles by walls via flood filling algo
@@ -236,9 +241,9 @@ def test_flood_fill():
 
     
 def test_find_element():
-    r = find_element(1, [[3, 2, 1], [4], [0, 1]])
-    assert len(r) == 2 and r[0] == (0, 2) and r[1] == (2, 1)
     assert find_element(0, []) == []
+    assert find_element(1, [[3,2,1],[4],[0,1]]) == [ (0,2), (2,1) ]
+    assert find_element(1, [ [1,1], [1] ]) == [ (0,0), (0,1), (1,0) ] 
     
     
 def test_build_level_from_tiles():
@@ -296,6 +301,20 @@ def test_build_level_from_tiles3():
     assert level.tiles[10][4] == TWAL  # last row's first 2 holes get filled 
 
 
+def test_build_level_from_tiles4():
+    level_str = (
+        "  ####\n"
+        "###  ####\n"
+        "#     $ #\n"
+        "# #  #$ #\n"
+        "# . .#@ #\n"
+        "#########\n"
+        )
+    tiles = list(map(lambda x:list(x), level_str.split(sep='\n')))
+    level = build_level_from_tiles(tiles, 16)
+    assert level
+    
+    
 def test_load_level_set():
     """ create a levelset file, load set, test set, delete file """
     filename = 'levelset.txt.test'
@@ -350,6 +369,7 @@ if __name__ == "__main__":
     test_build_level_from_tiles()
     test_build_level_from_tiles2()
     test_build_level_from_tiles3()
+    test_build_level_from_tiles4()
     test_load_level_set()
     
     test_moves()
