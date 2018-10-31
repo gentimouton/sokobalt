@@ -9,9 +9,9 @@ BASE_RES = 640  # ideally a multiple of 8
 SHEET_FILENAME = '../assets/sokobalt_tilesheet_8px.png'
 SPR_SIZE = 8 # size of sprites, in pixels. Sprites must be square.
 
-# LEVELS_FILENAME = '../assets/levels_test.txt'
-LEVELS_FILENAME = '../assets/levels_microban.txt'
-LEVELS_MAXSIZE = 16 # maximum width and height of a level
+LEVELS_FILENAME = '../assets/levels_test.txt'
+# LEVELS_FILENAME = '../assets/levels_microban.txt'
+LEVELS_MAXSIZE = 12 # maximum width and height of a level
 
 # map button to keys
 bmap = {
