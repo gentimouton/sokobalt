@@ -1,7 +1,7 @@
 
 # sokobalt
 
-![screenshot](assets/screenshots.png "screenshot")
+![screenshot](assets/screenshot.png "screenshot")
 
 A kind of Sokoban, a 1981 puzzle game where the player pushes crates in a warehouse
 
