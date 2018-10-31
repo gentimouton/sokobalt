@@ -29,3 +29,9 @@ and http://www.sourcecode.se/sokoban/levels
 
 Lines starting with any other character are comments should be ignored.
 Levels are separated by at least one empty line or comment. 
+
+# TODO
+- navigate between levels
+- store progress in local pickle
+- level solver
+- use bg and dirtysprites instead of redrawing every tick
