@@ -22,12 +22,13 @@ class GameScene(Scene):
         # load level set  
         self.levels = load_level_set(LEVELS_FILENAME, LEVELS_MAXSIZE)  # list
         self.cur_level = 0
+        self.level = None
         self.start_level()
-        
+
     def start_level(self):
         self.level = self.levels[self.cur_level]
         self.level.reset()
-        
+
     def tick(self, ms):
         """ process player inputs and draw """
         if controller.btn_event(BUPP):
@@ -40,13 +41,13 @@ class GameScene(Scene):
             self.level.move(DIRE)
         if controller.btn_event(BSLC):
             self.start_level()
-        
+
         if self.level.is_complete():
             # TODO: dance
             # load next level
             self.cur_level = (self.cur_level + 1) % len(self.levels)
             self.start_level()
-        
+
         self._draw()
         return None, {}
 
@@ -58,22 +59,23 @@ class GameScene(Scene):
         # TODO: DirtySprite for player and fixed surf for bg
         pview.fill((0, 155, 155))  # unnecessary?
         draw_level(self.level, pview.screen, self.sprites)
-#         pview.screen.blit(self.bg, (0, 0))
+        # pview.screen.blit(self.bg, (0, 0))
         pg.display.flip()
         # TODO: right-side HUD tracking steps and current level number
         # TODO: level navigator menu (can replay any unlocked one)
-    
+
     def redraw(self):
         # TODO: recompute/redraw bg
-#         self._draw()
+        # self._draw()
         pass
-        
-        
+
+
 if __name__ == "__main__":
     from constants import OUT_QUIT, OUT_FSCR
     from settings import BASE_RES
+
     pg.init()
-    pview.set_mode((BASE_RES, BASE_RES))
+    pview.set_mode(BASE_RES)
     clock = pg.time.Clock()
     scene = GameScene()
     while True:
@@ -85,5 +87,5 @@ if __name__ == "__main__":
             pview.toggle_fullscreen()
             scene.redraw()
 
-        next_scene_id, kwargs = scene.tick(ms) 
-        pg.display.set_caption('game scene %.1f' % clock.get_fps())
+        next_scene_id, kwargs = scene.tick(ms)
+        pg.display.set_caption('game scene -- %.1f fps' % clock.get_fps())

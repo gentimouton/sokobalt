@@ -11,11 +11,9 @@ Similar projects
 
 
 
-# File format of level sets
+# Levels
 
-From http://sokobano.de/wiki/index.php?title=Level_format
-and http://sneezingtiger.com/sokoban/levels.html
-and http://www.sourcecode.se/sokoban/levels
+[Level format](http://sokobano.de/wiki/index.php?title=Level_format)
 
 |symbol|description|
 |---|---|
@@ -30,8 +28,14 @@ and http://www.sourcecode.se/sokoban/levels
 Lines starting with any other character are comments should be ignored.
 Levels are separated by at least one empty line or comment. 
 
+Levels:
+- [sneezing tiger](http://sneezingtiger.com/sokoban/levels.html)
+- [sourcecode.se](http://www.sourcecode.se/sokoban/levels)
+
+
 # TODO
 - navigate between levels
-- store progress in local pickle
+- store unlocked levels in a local save pickle
 - level solver
-- use bg and dirtysprites instead of redrawing every tick
+- use bg and DirtySprite instead of redrawing every tick
+- move history, can undo

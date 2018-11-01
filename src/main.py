@@ -3,25 +3,26 @@ from controls import controller
 from game_scene import GameScene
 import pview
 import pygame as pg
-from scene import SCN_QUIT, SCN_GAME
-import settings
+
+from menu_scene import MenuScene
+from scene import SCN_QUIT, SCN_GAME, SCN_MENU
+from settings import BASE_RES, FPS
 
 
 def main():
     pg.init()
     pg.display.set_caption('Sokobalt')
-    pview.set_mode((800, 600))
+    pview.set_mode(BASE_RES)
     clock = pg.time.Clock()
-    scenes = { 
-#         SCN_MENU: MenuScene(), 
+    scenes = {
+        SCN_MENU: MenuScene(),
         SCN_GAME: GameScene()
-#         SCN_OVER: GameOverScene() 
-        }
+    }
     cur_scene = scenes[SCN_GAME]
 
     while True:
-        ms = clock.tick(settings.FPS)  # throttle
-        
+        ms = clock.tick(FPS)  # throttle
+
         # poll controls
         outcome = controller.poll()  # get player input
         if outcome == OUT_QUIT:
@@ -38,7 +39,7 @@ def main():
             cur_scene.pause()
             cur_scene = scenes[next_scene_id]
             cur_scene.resume(**kwargs)
-        
-        
+
+
 if __name__ == "__main__":
     main()

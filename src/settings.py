@@ -4,7 +4,7 @@ import pygame as pg
 
 FPS = 30
 DEBUG = True
-BASE_RES = 640  # ideally a multiple of 8
+BASE_RES = 800, 600  # height should ideally be a multiple of 8
 
 SHEET_FILENAME = '../assets/sokobalt_tilesheet_8px.png'
 SPR_SIZE = 8 # size of sprites, in pixels. Sprites must be square.
