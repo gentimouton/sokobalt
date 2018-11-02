@@ -4,14 +4,14 @@ Can also pause game and go to main menu, passing an option to resume game.
 """
 import ptext
 from pview import T
-from constants import BDWN, BUPP, BLFT, BRGT
+from constants import BDWN, BUPP, BLFT, BRGT, BRST
 from constants import SPR_ORDER, DIRN, DIRS, DIRE, DIRW
 from controls import controller
 from level_draw import load_spritesheet, draw_level
 import pview
 import pygame as pg
 from scene import Scene, SCN_GAME
-from settings import SHEET_FILENAME, SPR_SIZE
+from settings import SHEET_FILENAME, SPR_SIZE, BASE_RES
 
 
 class GameScene(Scene):
@@ -32,6 +32,8 @@ class GameScene(Scene):
             self.level.move(DIRW)
         if controller.btn_event(BRGT):
             self.level.move(DIRE)
+        if controller.btn_event(BRST):
+            self.level.reset()
 
         if self.level.is_complete():
             # TODO: dance
@@ -54,6 +56,9 @@ class GameScene(Scene):
         x = BASE_RES[1] + 10
         y = 10
         ptext.draw('Level %d' % self.level.level_num, T(x, y), fontsize=T(40))
+        w, h = BASE_RES
+        txt = 'R: rest level\nF11: toggle fullscreen\nEsc: menu'
+        ptext.draw(txt, T(h+20, h-80), fontsize=T(20))
 
         pg.display.flip()
 
@@ -67,7 +72,7 @@ class GameScene(Scene):
 
 if __name__ == "__main__":
     from constants import OUT_QUIT, OUT_FSCR
-    from settings import BASE_RES, LEVELS_FILENAME, LEVELS_MAXSIZE
+    from settings import LEVELS_FILENAME, LEVELS_MAXSIZE
     from level import load_level_set
 
     pg.init()

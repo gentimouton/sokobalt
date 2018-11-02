@@ -34,8 +34,10 @@ Levels:
 
 
 # TODO
+- ESC to pull menu
+- R to reset level
+- move history, can undo
 - navigate between levels
 - store unlocked levels in a local save pickle
 - level solver
 - use bg and DirtySprite instead of redrawing every tick
-- move history, can undo

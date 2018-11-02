@@ -1,4 +1,4 @@
-from constants import BSLC, BDWN, BUPP, BLFT, BRGT
+from constants import BSLC, BDWN, BUPP, BLFT, BRGT, BRST
 import pygame as pg
 
 
@@ -20,6 +20,7 @@ bmap = {
     BDWN: [pg.K_s, pg.K_DOWN],
     BLFT: [pg.K_a, pg.K_LEFT],
     BRGT: [pg.K_d, pg.K_RIGHT],
+    BRST: [pg.K_r]
     }
 
 # map keys to button, eg K_d -> 'right'
