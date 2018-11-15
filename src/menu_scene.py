@@ -1,4 +1,4 @@
-from constants import BSLC, BDWN, BUPP, BLFT, BRGT
+from constants import BSLC, BDWN, BUPP, BLFT, BRGT, BMNU
 from controls import controller
 import ptext
 from pview import T
@@ -22,6 +22,8 @@ class MenuScene(Scene):
         blanks = self.w - ((len(levels) + 1) % self.w)  # +1 for quit button
         self._choices += [('--', None, {})] * blanks
         self._choices += [('Quit', SCN_QUIT, {})]
+        # current level in game scene, used if player wants to resume level
+        self.cur_level = None
 
     def tick(self, ms):
         # process inputs
@@ -30,18 +32,23 @@ class MenuScene(Scene):
         n = len(self._choices)
         if controller.btn_event(BSLC):
             c = self._choices[self._choice]
-            return c[1], c[2]
+            if c[2]['level'] == self.cur_level:
+                return SCN_GAME, {'resume_level': True}  # key matters, not value
+            else:
+                return c[1], c[2]
+        if controller.btn_event(BMNU):  # press menu button when in menu: exit
+            return SCN_QUIT, {}
         elif controller.btn_event(BDWN):
             self._choice = (cur + w) % n
         elif controller.btn_event(BUPP):
             self._choice = (cur - w) % n
         elif controller.btn_event(BLFT):
-            if self._choice % w == 0:  # beginning of row
+            if cur % w == 0:  # beginning of row
                 self._choice += w - 1  # go to end
             else:
                 self._choice -= 1
         elif controller.btn_event(BRGT):
-            if self._choice % w == w - 1:  # end of row
+            if cur % w == w - 1:  # end of row
                 self._choice -= w - 1  # back to beginning
             else:
                 self._choice += 1
@@ -62,17 +69,10 @@ class MenuScene(Scene):
     def resume(self, **kwargs):
         """ called by scene manager from the game scene, passing kwargs. """
         self._choice = 0
-        if kwargs.get('can_resume'):
-            self._choices = [
-                ('Resume', SCN_GAME, {'cmd': None}),
-                ('New game', SCN_GAME, {'cmd': None}),
-                ('Quit', SCN_QUIT, {})
-            ]
-        else:
-            self._choices = [
-                ('New game', SCN_GAME, {'cmd': None}),
-                ('Quit', SCN_QUIT, {})
-            ]
+        if kwargs.get('current_level'):
+            level = kwargs['current_level']
+            self._choice = level
+            self.cur_level = level
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-from constants import BSLC, BDWN, BUPP, BLFT, BRGT, BRST
+from constants import BSLC, BDWN, BUPP, BLFT, BRGT, BRST, BMNU
 import pygame as pg
 
 
@@ -9,7 +9,8 @@ BASE_RES = 800, 600  # height should ideally be a multiple of 8
 SHEET_FILENAME = '../assets/sokobalt_tilesheet_8px.png'
 SPR_SIZE = 8 # size of sprites, in pixels. Sprites must be square.
 
-LEVELS_FILENAME = '../assets/levels_test.txt'
+# LEVELS_FILENAME = '../assets/levels_test.txt'
+LEVELS_FILENAME = '../assets/maps_after_all.txt'
 # LEVELS_FILENAME = '../assets/levels_microban.txt'
 LEVELS_MAXSIZE = 12 # maximum width and height of a level
 
@@ -20,7 +21,8 @@ bmap = {
     BDWN: [pg.K_s, pg.K_DOWN],
     BLFT: [pg.K_a, pg.K_LEFT],
     BRGT: [pg.K_d, pg.K_RIGHT],
-    BRST: [pg.K_r]
+    BRST: [pg.K_r],
+    BMNU: [pg.K_ESCAPE]
     }
 
 # map keys to button, eg K_d -> 'right'

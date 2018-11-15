@@ -61,6 +61,7 @@ class Level:
         self.goals = deepcopy(self.base_goals)
         self.player = deepcopy(self.base_player)
         self.boxes = deepcopy(self.base_boxes)
+        print('reset level %d ' % self.level_num)
 
     def move(self, d):
         """ execute move in direction d if possible. 

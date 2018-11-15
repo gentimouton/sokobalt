@@ -4,7 +4,7 @@ OUT_NONE, OUT_QUIT, OUT_FSCR = 'none', 'quit', 'fullscreen'
 
 # buttons
 BUPP, BDWN, BLFT, BRGT = 'up', 'down', 'left', 'right'
-BSLC, BRST = 'select', 'reset'
+BSLC, BRST, BMNU = 'select', 'reset', 'menu'
 
 # colorkey of sprites 
 TRANSPARENT = (255, 0, 255)

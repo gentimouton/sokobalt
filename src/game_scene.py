@@ -4,13 +4,13 @@ Can also pause game and go to main menu, passing an option to resume game.
 """
 import ptext
 from pview import T
-from constants import BDWN, BUPP, BLFT, BRGT, BRST
+from constants import BDWN, BUPP, BLFT, BRGT, BRST, BMNU
 from constants import SPR_ORDER, DIRN, DIRS, DIRE, DIRW
 from controls import controller
 from level_draw import load_spritesheet, draw_level
 import pview
 import pygame as pg
-from scene import Scene, SCN_GAME
+from scene import Scene, SCN_GAME, SCN_MENU
 from settings import SHEET_FILENAME, SPR_SIZE, BASE_RES
 
 
@@ -34,6 +34,8 @@ class GameScene(Scene):
             self.level.move(DIRE)
         if controller.btn_event(BRST):
             self.level.reset()
+        if controller.btn_event(BMNU):
+            return SCN_MENU, {'current_level': self.level.level_num}
 
         if self.level.is_complete():
             # TODO: dance
@@ -44,8 +46,12 @@ class GameScene(Scene):
 
     def resume(self, **kwargs):
         """ Scene callback. Called from the menu scene via scene manager. """
-        self.level = self.levels[kwargs['level'] % len(self.levels)]
-        self.level.reset()
+        if kwargs.get('level'):
+            level_num = kwargs['level']
+            self.level = self.levels[level_num % len(self.levels)]
+            self.level.reset()
+        if kwargs.get('resume_level'):
+            pass
 
     def _draw(self):
         # TODO: DirtySprite for player and fixed surf for bg

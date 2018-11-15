@@ -35,9 +35,25 @@ Levels:
 
 # TODO
 - ESC to pull menu
-- R to reset level
+- navigate through 100 levels in menu
+- logging and better `level.__repr__` (want sokoban level format, not list of lists) 
 - move history, can undo
 - navigate between levels
 - store unlocked levels in a local save pickle
-- level solver
 - use bg and DirtySprite instead of redrawing every tick
+- level solver (see below)
+
+
+# Solver
+Build a level solving map: starting from start state, enumerate all possible 
+game states and organize them in a graph. For each state, compute a solution, 
+ie a path from state to the win state.
+
+A*, heuristic is sum of distance of carts to nearest slots. 
+Optimize: 1) Limit to depth of 50 or 100, 2) prune off/ignore nodes 
+where state was seen higher up in the tree
+
+Player can press H for a hint. 
+Hint should be displayed as a blinking arrow on the soonest cart to push 
+(ie skip all the player movement to get there). 
+Arrow indicates direction to push towards.

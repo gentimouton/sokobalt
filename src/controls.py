@@ -2,7 +2,8 @@ import pygame as pg
 import settings
 from constants import OUT_FSCR, OUT_NONE, OUT_QUIT
 
-class Controller():
+
+class Controller:
     def __init__(self):
         self._bdown_events = set()  # buttons newly pressed this frame
         self._bpressed = set()  # buttons still pressed right now.
@@ -10,7 +11,7 @@ class Controller():
     def poll(self):
         """ 
         toggle fullscreen with F11, 
-        quit with ESC or alt-F4. 
+        quit with alt-F4.
         returns an outcome defined in constants. 
         """
         kmap = settings.kmap
@@ -25,9 +26,7 @@ class Controller():
             if event.type == pg.QUIT:
                 return OUT_QUIT
             if event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
-                    return OUT_QUIT
-                elif event.key == pg.K_F4 and alt_held:
+                if event.key == pg.K_F4 and alt_held:
                     return OUT_QUIT
                 elif event.key in valid_keys:
                     self._bdown_events.add(kmap[event.key])
