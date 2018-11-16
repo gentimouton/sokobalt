@@ -34,11 +34,9 @@ Levels:
 
 
 # TODO
-- ESC to pull menu
 - navigate through 100 levels in menu
 - logging and better `level.__repr__` (want sokoban level format, not list of lists) 
 - move history, can undo
-- navigate between levels
 - store unlocked levels in a local save pickle
 - use bg and DirtySprite instead of redrawing every tick
 - level solver (see below)
