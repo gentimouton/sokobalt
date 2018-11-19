@@ -33,13 +33,14 @@ Levels:
 - [sourcecode.se](http://www.sourcecode.se/sokoban/levels)
 
 
-# TODO
-- navigate through 100 levels in menu
-- logging and better `level.__repr__` (want sokoban level format, not list of lists) 
+# TODO 
 - move history, can undo
 - store unlocked levels in a local save pickle
 - use bg and DirtySprite instead of redrawing every tick
 - level solver (see below)
+- pyinstaller https://stackoverflow.com/a/36456473
+- bug: start and complete level 1, then ESC in L2, go back to L1. 
+Bug: L2 loads instead of L1. 
 
 
 # Solver

@@ -8,9 +8,18 @@ from level import load_level_set
 from menu_scene import MenuScene
 from scene import SCN_QUIT, SCN_GAME, SCN_MENU
 from settings import BASE_RES, FPS, LEVELS_FILENAME, LEVELS_MAXSIZE
+import logging.config
 
 
 def main():
+
+    # configure the logger before anything else happens
+    logging.config.fileConfig('logging.conf')
+
+    # The game logger is configured when the config module is imported.
+    log = logging.getLogger('game')
+    log.info('Main started')
+
     # load levels
     levels = load_level_set(LEVELS_FILENAME, LEVELS_MAXSIZE)  # list
 
@@ -23,7 +32,6 @@ def main():
         SCN_GAME: GameScene(levels)
     }
     cur_scene = scenes[SCN_MENU]
-
 
     while True:
         ms = clock.tick(FPS)  # throttle

@@ -1,6 +1,8 @@
 import os
 from copy import deepcopy
 from constants import DIRN, DIRS, DIRE, DIRW
+import logging
+
 
 # sokoban file format: characters and their meaning
 TWAL, TFLR, TGOL = '#', ' ', '.'
@@ -37,18 +39,7 @@ class Level:
         self.reset()
 
     def __repr__(self):
-        tiles = [
-            [
-                TPGL if (tile == self.player and tile in self.goals)
-                else TBGL if tile in self.boxes and tile in self.goals
-                else TBOX if tile in self.boxes
-                else TPLR if tile == self.player
-                else tile  # wall, empty floor, or empty goal
-                for tile in row
-            ]
-            for row in self.tiles
-        ]
-        return 'L' + self.level_num + '\n'.join([''.join(row) for row in tiles])
+        return pretty_level_print(self.level_num, self.tiles)
 
     def is_complete(self):
         """ true if each goal has a box, false otherwise """
@@ -61,7 +52,8 @@ class Level:
         self.goals = deepcopy(self.base_goals)
         self.player = deepcopy(self.base_player)
         self.boxes = deepcopy(self.base_boxes)
-        print('reset level %d ' % self.level_num)
+        log = logging.getLogger('game')
+        log.debug('reset level %d ' % self.level_num)
 
     def move(self, d):
         """ execute move in direction d if possible. 
@@ -93,6 +85,15 @@ class Level:
         tiles[d1y][d1x] = TPGL if dest1 in (TGOL, TBGL) else TPLR
         self.player = d1y, d1x
         return True
+
+
+def pretty_level_print(level_num, tiles):
+    txt = 'Level ' + str(level_num) + '\n'
+    try:
+        txt += '\n'.join([''.join(row) for row in tiles])
+    except IndexError:
+        txt += 'Could not parse level from tiles %s' % str(tiles)
+    return txt
 
 
 def find_element(e, l):
@@ -135,16 +136,22 @@ def build_level_from_tiles(tiles, maxs=16, level_num=0):
     - must have 1+ box, 1+ empty goal, and exactly 1 player,
     - each tile must be in the supported tileset '@.#*$ '
     """
+    log = logging.getLogger('game')
+
     w = max(map(lambda x: len(x), tiles))
     h = len(tiles)
     if w > maxs or h > maxs:  # too wide or too tall
-        print('Level is too wide or too tall: %d,%d' % (w, h))
+        log.warning('Level %d too wide or too tall: (%d,%d), expected max %s'
+                    % (level_num, w, h, maxs))
+        log.debug(pretty_level_print(level_num, tiles))
         return None
 
     # check that all characters are supported 
     n_wrong = sum([0 if e in '@.#*$+ ' else 1 for row in tiles for e in row])
     if n_wrong >= 1:
-        print('Level has %d tiles with unrecognized character(s)' % n_wrong)
+        log.warning('Level %d has %d tiles with unrecognized character(s)'
+                    % (level_num, n_wrong))
+        log.debug(pretty_level_print(level_num, tiles))
         return None
 
     # add walls at the end of short rows
@@ -156,44 +163,33 @@ def build_level_from_tiles(tiles, maxs=16, level_num=0):
         tiles[i] = [TWAL] * left_hole + tiles[i] + [TWAL] * right_hole
     # add rows of walls above and below, if necessary
     tiles = [[TWAL] * maxs] * ((maxs - h) // 2) + tiles
-    tiles = tiles + [[TWAL] * maxs] * (maxs - len(tiles))  # remaining missing 
-
-    # check that there are walls all around the periphery
-    n_walls = sum([1 if e == TWAL else 0 for e in tiles[0]])
-    n_walls += sum([1 if row[0] == TWAL else 0 for row in tiles[1:-1]])
-    n_walls += sum([1 if row[-1] == TWAL else 0 for row in tiles[1:-1]])
-    n_walls += sum([1 if e == TWAL else 0 for e in tiles[-1]])
-    if n_walls != 4 * (maxs - 1):
-        print('Level has %d peripheral walls, need %d'
-              % (n_walls, 4 * (maxs - 1)))
-        print(tiles)
-        return None
+    tiles = tiles + [[TWAL] * maxs] * (maxs - len(tiles))  # remaining missing
 
     # find player position, and check if missing or too many
     start = find_element('@', tiles) + find_element('+', tiles)
     if len(start) != 1:
-        print('Level has 0 or >1 player starting positions: %s' % str(start))
-        print(tiles)
+        log.warning('Level has 0 or >1 player starting positions: %s' % str(start))
+        log.debug(pretty_level_print(level_num, tiles))
         return None
     start = start[0]
 
     # find goal positions, and check at least one of them has no box on it
     goals = find_element('.', tiles) + find_element('+', tiles)
     if not goals:
-        print('Level has all its goals fulfilled already')
-        print(tiles)
+        log.warning('Level has all its goals fulfilled already')
+        log.debug(pretty_level_print(level_num, tiles))
         return None
     goals = goals + find_element('*', tiles)  # add goals with boxes on them 
 
     # find boxes starting positions. Check 1+ box, and n_boxes >= n_goals.
     boxes = find_element('$', tiles) + find_element('*', tiles)
     if not boxes:
-        print('Level has no box to move')
-        print(tiles)
+        log.warning('Level has no box to move')
+        log.debug(pretty_level_print(level_num, tiles))
         return None
     if len(boxes) < len(goals):
-        print('Level has fewer boxes than goals')
-        print(tiles)
+        log.warning('Level has fewer boxes than goals')
+        log.debug(pretty_level_print(level_num, tiles))
         return None
 
     # replace unreachable tiles by walls via flood filling algo
@@ -204,13 +200,25 @@ def build_level_from_tiles(tiles, maxs=16, level_num=0):
         for j, row in enumerate(tiles)
     ]
 
+    # check that there are walls all around the periphery
+    n_walls = sum([1 if e == TWAL else 0 for e in tiles[0]])
+    n_walls += sum([1 if row[0] == TWAL else 0 for row in tiles[1:-1]])
+    n_walls += sum([1 if row[-1] == TWAL else 0 for row in tiles[1:-1]])
+    n_walls += sum([1 if e == TWAL else 0 for e in tiles[-1]])
+    if n_walls != 4 * (maxs - 1):
+        log.warning('Level has %d peripheral walls, need %d'
+              % (n_walls, 4 * (maxs - 1)))
+        log.debug(pretty_level_print(level_num, tiles))
+        return None
+
     return Level(level_num, tiles, goals, start, boxes)
 
 
 def load_level_set(filepath, maxs=16):
     """ return list of levels, or None if cant load the file """
+    log = logging.getLogger('game')
     if not os.path.isfile(filepath):
-        print('could not find file %s' % filepath)
+        log.error('could not find level-set file %s' % filepath)
         return None
 
     with open(filepath, 'r') as f:
@@ -232,6 +240,18 @@ def load_level_set(filepath, maxs=16):
 
 
 ################# TESTS ##################
+
+
+def test_pretty_level_print():
+    level_num = 0
+    tiles = [
+        ['#', '#', '#', '#', '#'],
+        ['#', '@', '$', '.', '#'],
+        ['#', '#', '#', '#', '#']
+        ]
+    txt = 'Level 0\n#####\n#@$.#\n#####'
+    s = pretty_level_print(level_num, tiles)
+    assert txt == s
 
 
 def test_flood_fill():
@@ -373,6 +393,7 @@ def test_moves():
 
 
 if __name__ == "__main__":
+    test_pretty_level_print()
     test_find_element()
     test_flood_fill()
     test_build_level_from_tiles()
